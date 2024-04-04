@@ -25,6 +25,7 @@ class AwsBedrockLangchainPythonCdkStack(Stack):
             ],
             resources= ["*"]
         )
+
         # Attach  policy to lambda_role for code commit read and write access
         codecommit_policy = iam.PolicyStatement(
             effect= iam.Effect.ALLOW,
@@ -32,7 +33,16 @@ class AwsBedrockLangchainPythonCdkStack(Stack):
                 "codecommit:*",
             ],
             resources= ["*"]
-        )    
+        ) 
+
+        # Create code commit repo
+        codecommit_repo = codecommit.Repository(
+            self,
+            "codecommit-repo",
+            repository_name="genai_remediations",
+            description="Code commit repo for remediations"
+        )
+
 
         lambda_role = iam.Role(
             self,
@@ -70,18 +80,16 @@ class AwsBedrockLangchainPythonCdkStack(Stack):
             runtime=_lambda.Runtime.PYTHON_3_11,
             architecture=_lambda.Architecture.ARM_64,
             role=lambda_role,
-            # Add environment variables: codecommit_repo_name and codecommit_branch_name
-            environment={
-                "codecommit_repo_name": codecommit.Repository,
-                "codecommit_branch_name": "main"
-            },
             layers=[
                 boto3_lambda_layer,
                 langchain_lambda_layer
             ],
-            timeout=Duration.seconds(300),
+            timeout=Duration.seconds(900),
             memory_size=1024,
         )
+        # Add environment variables to the lambda function
+        langchain_bedrock_lambda.add_environment('codecommit_repo_name', codecommit_repo.repository_name)
+        langchain_bedrock_lambda.add_environment('codecommit_branch_name', 'main')
 
         # Add lambda permission to allow bedrock to invoke the function
         langchain_bedrock_lambda.add_permission(
@@ -92,16 +100,10 @@ class AwsBedrockLangchainPythonCdkStack(Stack):
             source_arn=f"arn:aws:bedrock:us-east-1:{self.account}:function:langchain-bedrock-lambda",
         )
 
-        # Create code commit repo
-        codecommit_repo = codecommit.Repository(
-            self,
-            "codecommit-repo",
-            repository_name="genai_remediations",
-            description="Code commit repo for remediations"
-        )
-
         # Create AWS Bedrock agent            
-
+        # Create AWS Bedrock action group
+        # Create Knowledge base
+        
         # CDK NAG suppression
         NagSuppressions.add_stack_suppressions(self, [
                                             {

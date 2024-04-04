@@ -25,8 +25,10 @@ bedrock_runtime = boto3.client(service_name="bedrock-runtime", config=boto_confi
 bedrock_client = boto3.client(service_name="bedrock-agent-runtime", config=boto_config, region_name="us-west-2")
 
 # parameters for codecommit grab from environment variables
-codecommit_repo_name = os.environ["codecommit_repo_name"]
-codecommit_branch_name = os.environ["codecommit_branch_name"]
+# codecommit_repo_name = os.environ["codecommit_repo_name"]
+# codecommit_branch_name = os.environ["codecommit_branch_name"]
+codecommit_repo_name = "genai_remediations"
+codecommit_branch_name = "main"
 
 
 
@@ -56,28 +58,38 @@ def rag_for_sechubfindings(sechub_finding):
     IAC_template = """
         Answer the question based only on the context given to you
         
-        You are an AWS security expert. You are to provide an automation runbook to remediate the Security Hub finding.
+        You are an AWS security expert. You are to find an automation runbook that will remediate the Security Hub finding.
         You will be provided with the following information: Security Hub finding.
-        * Understand how this finding can be remediated, if the remediation is available through a runbook or playbook 
-        * Provide the AWS Systems Manager predefined runbook or Automated Security Response Playbook if available. If automated remediation is not available for the finding, say there isn't one, dont try and make on up
-        * Provide details on how to remediate the finding.
+        * Understand how this finding can be remediated, and search if remediation is available through a SSM runbook or ASR playbook
+        * If available, provide the name of AWS Systems Manager predefined runbook or Automated Security Response Playbook. If automated remediation is not available through AWS, say there isn't one, dont try and make on up
+        * Provide details on how to remediate the finding if runbook is not available.
         
         If you dont know the answer, dont try and make one up. Just say that you dont know the answer.
         
-        Output the answer in json in the following format: 
+        Output the answer with the following details: 
         
         security_hub_finding_title:
         remediation_avaliable: (true or false)
         remediation_runbook:
         remediation_details:
+        resource_type: 
 
         Question: {question}
         Context: {context}
-        
+        {format_instructions}
         """
+    class sechub_output(BaseModel):
+        remediation_details: str = Field(description="remediation_details")
+        remediation_available: bool = Field(description="remediaiton_available")
+        remediation_runbook: str = Field(description="remediation_runbook")
+        security_hub_finding_title: str = Field(description="security_hub_finding_title")
+        resource_type: str = Field(description="resource_type")
+
+    parser=PydanticOutputParser(pydantic_object=sechub_output)
+
     iac_prompt_template= PromptTemplate(
         input_variables=["context", "question"],
-        # partial_variables={"format_instructions": parser.get_format_instructions()},
+        partial_variables={"format_instructions": parser.get_format_instructions()},
         template=IAC_template,
     )
 
@@ -87,25 +99,26 @@ def rag_for_sechubfindings(sechub_finding):
     chain1 = ( setup_and_retrieval
         | iac_prompt_template
         | llm
-        | StrOutputParser()
+        | parser
     )
     chain1_response = chain1.invoke("What is the remediation for the following security hub finding: {}".format(sechub_finding))
-    # remediation_available = chain1_response["remediation_avaliable"]
-    # remediation_runbook = chain1_response["remediation_runbook"]
-    # remediation_details = chain1_response["remediation_details"]
-    # sechub_finding = chain1_response["sechub_finding_title"]
-    
-    if  'remediation_available: "false"' or 'remediation_available: false' in chain1_response:
+    remediation_details = chain1_response.remediation_details
+    remediation_available = chain1_response.remediation_available
+    remediation_runbook = chain1_response.remediation_runbook
+    security_hub_finding_title = chain1_response.security_hub_finding_title
+    resource_type = chain1_response.resource_type
+    LOGGER.info(chain1_response)
+    if not remediation_available:
         ################
         # Second chain #
         ################
         IAC_template2 = """
             You will perform actions based on the inputs given to you
-            Create a Cloudformation template to remediate the following security hub finding: {sechub_finding}.
+            Your task is to create a Cloudformation template to remediate the following security hub finding: {sechub_finding}.
             The template should be in YAML format.
+            The template should automate the remediation process by SSM custom document
+            Use the details provided to you help create the Cloudformation Template: {remediation_details}
             Don"t exclude any resources for brevity.
-            The Cloudformation template should be in YAML format.
-            Define outputs for critical resources.
             Ensure the code is syntactically correct based on AWS Cloudformation documentation and follows AWS Cloudformation best practices.
             If any resource is not added from the architecture diagram give the response on why it was not included. 
 
@@ -116,7 +129,7 @@ def rag_for_sechubfindings(sechub_finding):
             ```
         """
         iac_prompt_template2 = PromptTemplate.from_template(IAC_template2)
-        input = {"sechub_finding": sechub_finding }
+        input = {"sechub_finding": sechub_finding, "remediation_details": remediation_details } 
         second_chain = (
             iac_prompt_template2
             | llm
@@ -136,33 +149,44 @@ def rag_for_sechubfindings(sechub_finding):
 
         """
         iac_prompt_template3 = PromptTemplate.from_template(IAC_template3)
-        input = {"sechub_finding": sechub_finding}
+        input = {"sechub_finding": sechub_finding, "remediation_runbook": remediation_runbook}
         third_chain = (
             iac_prompt_template3
             | llm
             | StrOutputParser()
         )
-        chain_response = third_chain.invoke(input) 
-    return chain_response
+        chain_response = third_chain.invoke(input)
+    # Remove all ':' characters from resource_type
+    resource_type = resource_type.replace(':', '')
+    return chain_response, resource_type
+    # return chain1_response
 
-# Function to parse yaml code from string output. The yaml code will be in the block ```yaml ...```. Function should save the output to a yaml file. The name of the file will be an input and should be prefixed "GenRem".
+# Function to parse yaml code from string output. The yaml code will be in the block ```yaml ...```. Function should save the output to a yaml file in /tmp folder. The name of the file will be an input and should be prefixed "GenRem".
 def parse_yaml_code(string_output, filename):
+    filename = 'GenRem-{}.yaml'.format(filename)
     yaml_code = string_output.split("```yaml")[1].split("```")[0]
-    file = 'GenRem-{}'.format(filename)
-    with open(file, "w") as f:
+    with open("/tmp/{}".format(filename), "w") as f:
         f.write(yaml_code)
-    return yaml_code
+        f.close()
+    #Return the filename
+    return filename
 
-# Function to commit the file to CodeCommit repo
-def commit_file(file, repo_name, branch_name):
-    codecommit_client = boto3.client("codecommit")
-    response = codecommit_client.put_file(
+# Create function to commit the yaml code into codecommit repository
+def commit_file(filename, repo_name, branch_name, resource_type):
+    codecommit_client = boto3.client("codecommit", region_name="us-west-2")
+    with open("/tmp/{}".format(filename), "r") as f:
+        file_content = f.read()
+    #Get the latest commit id
+    commit_id = codecommit_client.get_branch(repositoryName=repo_name, branchName=branch_name)["branch"]["commitId"]
+    commit_response = codecommit_client.put_file(
         repositoryName=repo_name,
         branchName=branch_name,
-        fileContent=file,
-        filePath=file,
+        fileContent=file_content,
+        filePath='{}/{}'.format(resource_type, filename),
+        parentCommitId=commit_id,
+        commitMessage="Committing the remediation runbook for the security hub finding",
     )
-    return response
+    return commit_response, '{}/{}'.format(resource_type, filename)
 
 # Function to get parameter for bedrock
 def get_named_parameter(event, name):
@@ -175,13 +199,13 @@ def lambda_handler(event, context):
     api_path = event["apiPath"]
     if api_path == "/secHubRemediate/{sechub_finding}":
         sechub_finding = get_named_parameter(event, "sechub_finding")
-        rag_response = rag_for_sechubfindings(sechub_finding)
+        rag_response, resource_type = rag_for_sechubfindings(sechub_finding)
     # Check if rag_response contains a yaml code block. If it does, parse the yaml code and commit it to CodeCommit repo.
     if "```yaml" in rag_response:
-        yaml_code = parse_yaml_code(rag_response, sechub_finding.replace(" ", ""))
-        commit_response = commit_file(yaml_code, codecommit_repo_name, codecommit_branch_name)
+        yaml_template = parse_yaml_code(rag_response, sechub_finding.replace(" ", ""))
+        commit_response, filepath = commit_file(yaml_template, codecommit_repo_name, codecommit_branch_name, resource_type)
         # Return response with link to the commited file.
-        rag_response = "The remediation runbook has been committed to CodeCommit repo. The link to the commited file is: {}".format(commit_response["commitId"])
+        rag_response = "The remediation runbook has been committed to CodeCommit repo. File : {} with commit ID: {}".format(filepath, commit_response['commitId'])
 
     response_body = {
         "application/json": {
