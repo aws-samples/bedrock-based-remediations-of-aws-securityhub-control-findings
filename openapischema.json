@@ -1,0 +1,46 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Industry specific Cloudformation template generator agent API",
+        "version": "1.0.0",
+        "description": "Industry specific Cloudformation template generator agent API is a RESTful web service that is designed to get the use case, industry segment and return the Infrastructure as code, Readme and cost estimates."
+    },
+    "paths": {
+        "/secHubRemediate/{sechub_finding}": {
+            "get": {
+                "summary": "Gets the Infrastructure as code for security hub finding or title",
+                "description": "Based on the customer input which includes the security hub finding id or title, the api should return the IAC to automate the remediation the finding",
+                "operationId": "getSechubFinding",
+                "parameters": [
+                    {
+                        "name": "sechub_finding",
+                        "in": "path",
+                        "description": "The security finding title or Id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "IAC finding remediations",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "Infrastructure_Code": {
+                                            "type": "string",
+                                            "description": "Return the infrastructure as code Cloudformation template to remediate the finding."
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
