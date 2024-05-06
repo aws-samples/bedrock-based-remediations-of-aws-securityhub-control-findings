@@ -3,6 +3,7 @@ from aws_cdk import (
     Duration,
     aws_iam as iam,
     aws_lambda as _lambda,
+    aws_pipelines as pipelines,
     aws_lambda_python_alpha as _alambda,
     aws_codecommit as codecommit,
     aws_bedrock as bedrock,
@@ -99,10 +100,6 @@ class AwsBedrockLangchainPythonCdkStack(Stack):
             source_account=self.account,
             source_arn=f"arn:aws:bedrock:us-east-1:{self.account}:function:langchain-bedrock-lambda",
         )
-
-        # Create AWS Bedrock agent            
-        # Create AWS Bedrock action group
-        # Create Knowledge base
         
         # CDK NAG suppression
         NagSuppressions.add_stack_suppressions(self, [
