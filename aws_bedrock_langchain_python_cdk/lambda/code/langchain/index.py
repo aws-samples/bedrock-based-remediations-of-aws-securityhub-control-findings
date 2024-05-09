@@ -25,17 +25,14 @@ bedrock_runtime = boto3.client(service_name="bedrock-runtime", config=boto_confi
 bedrock_client = boto3.client(service_name="bedrock-agent-runtime", config=boto_config, region_name="us-west-2")
 
 # parameters for codecommit grab from environment variables
-# codecommit_repo_name = os.environ["codecommit_repo_name"]
-# codecommit_branch_name = os.environ["codecommit_branch_name"]
-codecommit_repo_name = "genai_remediations"
-codecommit_branch_name = "main"
-
+codecommit_repo_name = os.environ["codecommit_repo_name"]
+codecommit_branch_name = os.environ["codecommit_branch_name"]
 
 
 def get_llm():
     model_kwargs = {
-    "max_tokens": 1024,
-    "temperature": 1,
+    "max_tokens": 4096,
+    "temperature": 0,
     "top_p": 0.99
 }
     llm = BedrockChat(
@@ -47,7 +44,12 @@ def get_llm():
 def rag_for_sechubfindings(sechub_finding):
     retriever = AmazonKnowledgeBasesRetriever(
         knowledge_base_id="RRBZ3ORVMO",
-        retrieval_config={"vectorSearchConfiguration": {"numberOfResults": 4}},
+        retrieval_config={
+            "vectorSearchConfiguration": {
+                "numberOfResults": 4,
+                "overrideSearchType": "HYBRID"
+                }
+            },
         client=bedrock_client,
         )
     llm = get_llm()
@@ -59,9 +61,15 @@ def rag_for_sechubfindings(sechub_finding):
         Answer the question based only on the context given to you
         
         You are an AWS security expert. You are to find an automation runbook that will remediate the Security Hub finding.
-        You will be provided with the following information: Security Hub finding.
-        * Understand how this finding can be remediated, and search if remediation is available through a SSM runbook or ASR playbook
-        * If available, provide the name of AWS Systems Manager predefined runbook or Automated Security Response Playbook. If automated remediation is not available through AWS, say there isn't one, dont try and make on up
+        First obtain the Security Hub Control ID and the remediation.
+        Then check the following:
+        * If the Control ID has a playbook remediation via Automated Security Response on AWS
+        * If AWS Systems Manager provided a predefined runbook to remediate
+        If any of these are found, then provide the name of the runbook or playbook. 
+        The name of the runbook or playbook should be the same as the name of the SSM document. 
+        If there is no predefined remediation available, say there is no automated remediation available.
+        If the Control ID does not have a predefined runbook, say there is no automated remediation available.
+        
         * Provide details on how to remediate the finding if runbook is not available.
         
         If you dont know the answer, dont try and make one up. Just say that you dont know the answer.
@@ -101,7 +109,7 @@ def rag_for_sechubfindings(sechub_finding):
         | llm
         | parser
     )
-    chain1_response = chain1.invoke("What is the remediation for the following security hub finding: {}".format(sechub_finding))
+    chain1_response = chain1.invoke("Is there a runbook to remediate the finding: {}?".format(sechub_finding))
     remediation_details = chain1_response.remediation_details
     remediation_available = chain1_response.remediation_available
     remediation_runbook = chain1_response.remediation_runbook

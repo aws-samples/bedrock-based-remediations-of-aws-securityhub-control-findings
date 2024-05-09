@@ -3,10 +3,8 @@ from aws_cdk import (
     Duration,
     aws_iam as iam,
     aws_lambda as _lambda,
-    aws_pipelines as pipelines,
     aws_lambda_python_alpha as _alambda,
     aws_codecommit as codecommit,
-    aws_bedrock as bedrock,
     aws_iam as iam,
     Stack,
     Duration
