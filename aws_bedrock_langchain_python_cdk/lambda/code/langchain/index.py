@@ -58,23 +58,17 @@ def rag_for_sechubfindings(sechub_finding):
     # First chain #
     ###############
     IAC_template = """
-        Answer the question based only on the context given to you
+        The following information is your only source of truth, only answer the question with the provided context, if you are unable to answer from that, tell the user Im having trouble finding an answer for you.
         
-        You are an AWS security expert. You are to find an automation runbook that will remediate the Security Hub finding.
-        First obtain the Security Hub Control ID and the remediation.
-        Then check the following:
-        * If the Control ID has a playbook remediation via Automated Security Response on AWS
-        * If AWS Systems Manager provided a predefined runbook to remediate
-        If any of these are found, then provide the name of the runbook or playbook. 
-        The name of the runbook or playbook should be the same as the name of the SSM document. 
-        If there is no predefined remediation available, say there is no automated remediation available.
-        If the Control ID does not have a predefined runbook, say there is no automated remediation available.
+        You are an AWS security expert. Your task is find out if there is an existing automated remediation path avialable for the finding.
+        To help answer the question:
+        * Check if there is a playbook remediation for the Security Hub Control ID in Automated Security Response on AWS (ASR).
+        * Check if there is a runbook in the Systems Manager Automation runbook reference, that will automate the remediation for the finding.
+        Provide the name of the AWS predefined playbook or runbook. The name of the runbook or playbook will start with 'AWS', for example 'AWS-EnableS3BucketEncryption' or 'AWSConfigRemediation-EnableAPIGatewayTracing'
+        Dont spread false information if one does not exist.
+        If you cant find a playbook or runbook you will say 'no remediation available'. 
         
-        * Provide details on how to remediate the finding if runbook is not available.
-        
-        If you dont know the answer, dont try and make one up. Just say that you dont know the answer.
-        
-        Output the answer with the following details: 
+        Output the following details: 
         
         security_hub_finding_title:
         remediation_avaliable: (true or false)
