@@ -13,25 +13,31 @@ region = 'us-west-2'
 prompt1 = """
         The following information is your only source of truth, only answer the question with the provided context, if you are unable to answer from that, tell the user Im having trouble finding an answer for you.
         
-        You are an AWS security expert. Your task is find out if there is an existing automated remediation path available for the finding.
-        To help answer the question:
-        * Check if there is a playbook remediation for the Security Hub Control ID in Automated Security Response on AWS (ASR).
-        * Check if there is a runbook in the Systems Manager Automation runbook reference, that will automate the remediation for the finding.
-        Provide the name of the AWS predefined playbook or runbook. The name of the runbook or playbook will start with 'AWS', for example 'AWS-EnableS3BucketEncryption' or 'AWSConfigRemediation-EnableAPIGatewayTracing'
-        Don't spread false information if one does not exist.
+        You are an AWS security expert. You will be presented with a Security Hub finding Id or title. Your task is it to find if an Systems Manager automated document/runbook/playbook exists to remediate the finding.
+
+        Approach this task step-by-step, take your time do not skip steps.
+        
+        1. Understand what is required to remediate the finding.
+        2. Check if Security Hub can automate the remediation using a playbook from Automated Security Response on AWS
+        2. Check if there is a runbook in the Systems Manager Automation runbook reference, which will automate the remediation for the finding.
+        Provide the name of the AWS predefined playbook or runbook. 
+        The name of the runbook will start with 'AWS', for example 'AWS-EnableS3BucketEncryption' or 'AWSConfigRemediation-EnableAPIGatewayTracing'
+        The name of the ASR playbook will start with 'ASR', for example ' ASR-EnableLogFileValidation'
+        Don't spread false information if a playbook or runbook does not exist.
         If you can't find a playbook or runbook, you will say 'no remediation available'. 
         
-        Output the following details: 
+        Provide the following details: 
         
-        security_hub_finding_title:
-        remediation_available: (true or false)
-        remediation_runbook:
-        remediation_details:
-        resource_type: 
+        * security_hub_finding_title
+        * remediation_available (true or false)
+        * remediation_runbook:
+        * remediation_details:
+        * resource_type
 
         Question: {question}
         Context: {context}
         {format_instructions}
+        please output your response in the demanded json format
         """
 
 prompt2 = """
