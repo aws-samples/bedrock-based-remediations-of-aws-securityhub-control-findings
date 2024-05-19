@@ -42,7 +42,7 @@ Follow these steps to deploy the CDK application:
    - Access the Amazon Bedrock console. Sign in and go directly to the Knowledge Base section.
    - Name your knowledge base. Choose a clear and descriptive name that reflects the purpose of your knowledge base, such as "AWSAutomationRunbooksPlaybooks."
    - Select an IAM role. Assign a preconfigured IAM role with the necessary permissions. It's typically best to let Amazon Bedrock create this role for you to ensure it has the correct permissions.
-   - Define the data source. For this solution, we are using three AWS documentation guides in PDF that covers all AWS provided automations through runbooks or playbooks. Upload the PDF files in the Git repo to an S3 bucket.
+   - Define the data source. For this solution, we are using three AWS documentation guides in PDF that covers all AWS provided automations through runbooks or playbooks. Upload the PDF files from the `data-source` folder in the Git repo to an S3 bucket. 
    - Choose the default embeddings model. The Amazon Titan Embeddings G1 is a text model that is preconfigured and ready to use, simplifying the process.
    - Opt for the managed vector store. Allow Amazon Bedrock to create and manage the vector store for you in Amazon OpenSearch Service.
    - Review and finalize. Double-check all entered information for accuracy. Pay special attention to the S3 bucket URI and IAM role details.
