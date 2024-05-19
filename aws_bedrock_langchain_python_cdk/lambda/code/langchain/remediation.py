@@ -154,7 +154,7 @@ class RemediationHandler:
         Returns:
             tuple: A tuple containing the commit response (dict) and the file path (str) in the repository.
         """
-        codecommit_client = boto3.client("codecommit", region_name="us-west-2")
+        codecommit_client = boto3.client("codecommit", region_name= self.region)
         with open(f"/tmp/{filename}", "r") as f:
             file_content = f.read()
         # Get the latest commit ID
