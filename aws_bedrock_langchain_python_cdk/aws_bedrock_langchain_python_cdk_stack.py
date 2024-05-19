@@ -24,7 +24,6 @@ class AwsBedrockLangchainPythonCdkStack(Stack):
             ],
             resources= ["*"]
         )
-
         # Attach  policy to lambda_role for code commit read and write access
         codecommit_policy = iam.PolicyStatement(
             effect= iam.Effect.ALLOW,
@@ -96,7 +95,7 @@ class AwsBedrockLangchainPythonCdkStack(Stack):
             principal=iam.ServicePrincipal("bedrock.amazonaws.com"),
             action="lambda:InvokeFunction",
             source_account=self.account,
-            source_arn=f"arn:aws:bedrock:us-east-1:{self.account}:function:langchain-bedrock-lambda",
+            source_arn=f"arn:aws:bedrock:{self.region}:{self.account}:function:langchain-bedrock-lambda",
         )
         
         # CDK NAG suppression
