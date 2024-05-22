@@ -22,7 +22,7 @@ class RemediationHandler:
     and committing remediation code to a CodeCommit repository.
     """
 
-    def __init__(self, modelId, region):
+    def __init__(self, modelId, region=os.environ['AWS_DEFAULT_REGION']):
         """
         Initialize the RemediationHandler instance with necessary AWS clients and configurations.
         """

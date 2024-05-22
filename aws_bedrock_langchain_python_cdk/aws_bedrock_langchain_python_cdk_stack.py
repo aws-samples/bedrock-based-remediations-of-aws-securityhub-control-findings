@@ -16,6 +16,11 @@ class AwsBedrockLangchainPythonCdkStack(Stack):
 
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
+        
+        # Get params from context
+        bedrock_agent_arn = self.node.try_get_context("BEDROCK_AGENT_ARN")
+        kb_id = self.node.try_get_context("KB_ID")
+        model_id = self.node.try_get_context("MODEL_ID")
 
         bedrock_policy = iam.PolicyStatement(
             effect= iam.Effect.ALLOW,
@@ -34,14 +39,13 @@ class AwsBedrockLangchainPythonCdkStack(Stack):
         ) 
 
         # Create code commit repo
-        codecommit_repo = codecommit.Repository(
+        self.codecommit_repo = codecommit.Repository(
             self,
             "codecommit-repo",
             repository_name="genai_remediations",
             description="Code commit repo for remediations"
         )
-
-
+        
         lambda_role = iam.Role(
             self,
             "LambdaRole",
@@ -84,18 +88,21 @@ class AwsBedrockLangchainPythonCdkStack(Stack):
             ],
             timeout=Duration.seconds(900),
             memory_size=1024,
+            environment={
+                "MODEL_ID": model_id,
+                "KB_ID": kb_id,
+                'codecommit_repo_name': self.codecommit_repo.repository_name,
+                "codecommit_branch_name": 'main'
+            }
         )
-        # Add environment variables to the lambda function
-        langchain_bedrock_lambda.add_environment('codecommit_repo_name', codecommit_repo.repository_name)
-        langchain_bedrock_lambda.add_environment('codecommit_branch_name', 'main')
-
+        
         # Add lambda permission to allow bedrock to invoke the function
         langchain_bedrock_lambda.add_permission(
             "bedrock-permission",
             principal=iam.ServicePrincipal("bedrock.amazonaws.com"),
             action="lambda:InvokeFunction",
             source_account=self.account,
-            source_arn=f"arn:aws:bedrock:{self.region}:{self.account}:function:langchain-bedrock-lambda",
+            source_arn=bedrock_agent_arn,
         )
         
         # CDK NAG suppression
@@ -107,7 +114,6 @@ class AwsBedrockLangchainPythonCdkStack(Stack):
                                                         'Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
                                                     ],
                                             }])
-        
         NagSuppressions.add_resource_suppressions(lambda_role,
                             suppressions=[{
                                             "id": "AwsSolutions-IAM5",

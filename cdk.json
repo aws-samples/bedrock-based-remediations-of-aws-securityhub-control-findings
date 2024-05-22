@@ -15,6 +15,10 @@
     ]
   },
   "context": {
+    "MODEL_ID": "anthropic.claude-3-sonnet-20240229-v1:0",
+    "KB_ID": "RRBZ3ORVMO",
+    "NOTIFICATION_EMAILS": ["huzaiz@amazon.com"],
+    "BEDROCK_AGENT_ARN": "arn:aws:bedrock:us-west-2:592233007537:agent/RPUSEDFDNE",
     "@aws-cdk/aws-lambda:recognizeLayerVersion": true,
     "@aws-cdk/core:checkSecretUsage": true,
     "@aws-cdk/core:target-partitions": [

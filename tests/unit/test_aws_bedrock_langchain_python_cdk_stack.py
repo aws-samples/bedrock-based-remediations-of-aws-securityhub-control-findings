@@ -1,15 +1,28 @@
 import aws_cdk as core
 import aws_cdk.assertions as assertions
+from cdk_nag import NagSuppressions
 
 from aws_bedrock_langchain_python_cdk.aws_bedrock_langchain_python_cdk_stack import AwsBedrockLangchainPythonCdkStack
 
-# example tests. To run these tests, uncomment this file along with the example
-# resource in aws_bedrock_langchain_python_cdk/aws_bedrock_langchain_python_cdk_stack.py
-def test_sqs_queue_created():
+def test_stack_created_with_model_id_and_kb_id():
     app = core.App()
-    stack = AwsBedrockLangchainPythonCdkStack(app, "aws-bedrock-langchain-python-cdk")
-    template = assertions.Template.from_stack(stack)
+    model_id = "example_model_id"
+    kb_id = "example_kb_id"
+    stack = AwsBedrockLangchainPythonCdkStack(app, "AwsBedrockLangchainPythonCdkStack", model_id=model_id, kb_id=kb_id)
+    assert stack.model_id == model_id
+    assert stack.kb_id == kb_id
 
-#     template.has_resource_properties("AWS::SQS::Queue", {
-#         "VisibilityTimeout": 300
-#     })
+def test_nag_suppressions_applied():
+    app = core.App()
+    model_id = "example_model_id"
+    kb_id = "example_kb_id"
+    stack = AwsBedrockLangchainPythonCdkStack(app, "AwsBedrockLangchainPythonCdkStack", model_id=model_id, kb_id=kb_id)
+
+    # Test case 1: cdk-nag report before applying NagSuppressions
+    cdk_nag_report = NagSuppressions.get_report(stack)
+    assert len(cdk_nag_report.get_warnings()) > 0, "Expected warnings before applying NagSuppressions"
+
+    # Test case 2: cdk-nag report after applying NagSuppressions
+    NagSuppressions.apply_suppressions(stack)
+    cdk_nag_report = NagSuppressions.get_report(stack)
+    assert len(cdk_nag_report.get_warnings()) == 0, "No warnings expected after applying NagSuppressions"

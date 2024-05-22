@@ -1,14 +1,16 @@
 import logging
+import os
 from remediation import RemediationHandler
 
 # Logger 
 LOGGER=logging.getLogger()
 LOGGER.setLevel(logging.INFO)
 
-# Setting baseline params
-kb_id = 'RRBZ3ORVMO'
-modelId = "anthropic.claude-3-sonnet-20240229-v1:0"
-region = 'us-west-2'
+# Setting baseline params these should be environment variables
+# kb_id = 'RRBZ3ORVMO'
+# modelId = "anthropic.claude-3-sonnet-20240229-v1:0"
+kb_id = os.environ['KB_ID']
+modelId = os.environ['MODEL_ID']
 
 prompt1 = """
         The following information is your only source of truth, only answer the question with the provided context, if you are unable to answer from that, tell the user Im having trouble finding an answer for you.
@@ -66,7 +68,7 @@ prompt3 = """
         """
 
 def rag_flow(sechub_finding, kb_id):
-    remediation_handler = RemediationHandler(modelId, region)
+    remediation_handler = RemediationHandler(modelId)
     # Invoke the llm using retrieval QA
     response = remediation_handler.retrievalChain(prompt1, kb_id).invoke(
         "Is there a runbook to remediate the finding: {}?".format(sechub_finding)
@@ -99,7 +101,7 @@ def rag_flow(sechub_finding, kb_id):
 #Create a lambda function
 def lambda_handler(event, context):
     LOGGER.info("Event: {}".format(event))
-    remediation_handler = RemediationHandler(modelId, region)
+    remediation_handler = RemediationHandler(modelId)
     action = event["actionGroup"]
     api_path = event["apiPath"]
     if api_path == "/secHubRemediate/{sechub_finding}":
