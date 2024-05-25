@@ -158,17 +158,21 @@ class RemediationHandler:
         with open(f"/tmp/{filename}", "r") as f:
             file_content = f.read()
         # Get the latest commit ID
-        commit_id = codecommit_client.get_branch(
-            repositoryName=self.codecommit_repo_name,
-            branchName=self.codecommit_branch_name
-        )["branch"]["commitId"]
+        commit_id = None
+        try:
+            commit_id = codecommit_client.get_branch(
+                repositoryName=self.codecommit_repo_name,
+                branchName=self.codecommit_branch_name
+            )["branch"]["commitId"]
+        except codecommit_client.exceptions.BranchDoesNotExistException:
+            pass
         commit_response = codecommit_client.put_file(
             repositoryName=self.codecommit_repo_name,
             branchName=self.codecommit_branch_name,
             fileContent=file_content,
             filePath=f'{resource_type}/{filename}',
-            parentCommitId=commit_id,
-            commitMessage="Committing the remediation runbook for the security hub finding",
+            parentCommitId=commit_id if commit_id else None,
+            commitMessage="Push the remediation template for the security hub finding",
         )
         return commit_response, f'{resource_type}/{filename}'
 
