@@ -154,7 +154,7 @@ class RemediationHandler:
         Returns:
             tuple: A tuple containing the commit response (dict) and the file path (str) in the repository.
         """
-        codecommit_client = boto3.client("codecommit", region_name = os.environ['AWS_DEFAULT_REGION'])
+        codecommit_client = boto3.client("codecommit", region_name=os.environ['AWS_DEFAULT_REGION'])
         with open(f"/tmp/{filename}", "r") as f:
             file_content = f.read()
         # Get the latest commit ID
@@ -166,14 +166,16 @@ class RemediationHandler:
             )["branch"]["commitId"]
         except codecommit_client.exceptions.BranchDoesNotExistException:
             pass
-        commit_response = codecommit_client.put_file(
-            repositoryName=self.codecommit_repo_name,
-            branchName=self.codecommit_branch_name,
-            fileContent=file_content,
-            filePath=f'{resource_type}/{filename}',
-            parentCommitId=commit_id if commit_id else None,
-            commitMessage="Push the remediation template for the security hub finding",
-        )
+        put_file_params = {
+            'repositoryName': self.codecommit_repo_name,
+            'branchName': self.codecommit_branch_name,
+            'fileContent': file_content,
+            'filePath': f'{resource_type}/{filename}',
+            'commitMessage': "Push the remediation template for the security hub finding",
+        }
+        if commit_id:
+            put_file_params['parentCommitId'] = commit_id
+        commit_response = codecommit_client.put_file(**put_file_params)
         return commit_response, f'{resource_type}/{filename}'
 
     def get_named_parameter(self, event, name):
