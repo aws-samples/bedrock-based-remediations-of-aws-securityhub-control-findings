@@ -135,14 +135,17 @@ prompt2 = """
         document will contain the automation steps to remediate the Security Hub finding. Use the
         remediation details provided to define the steps in the SSM document.
 
-        4. Ensure that the CloudFormation template follows AWS best practices, such as separating resources
+        4. All automation scripts should be either in PowerShell or Python. Ensure scripts are in correct
+        syntax and are valid AWS commands.
+
+        5. Ensure that the CloudFormation template follows AWS best practices, such as separating resources
         into logical sections, using appropriate resource names, and adding descriptions for resources and
         parameters.
 
-        5. Validate the CloudFormation template syntax and ensure it is compliant with the AWS
+        6. Validate the CloudFormation template syntax and ensure it is compliant with the AWS
         CloudFormation documentation.
 
-        6. If any resources are not included from the provided architecture diagram, explain why they were
+        7. If any resources are not included from the provided architecture diagram, explain why they were
         not included in the template.
 
         Once you have completed the CloudFormation template, provide the YAML code within Markdown code
