@@ -3,7 +3,8 @@ from aws_cdk import (
     aws_codepipeline as codepipeline,
     aws_codepipeline_actions as codepipeline_actions,
     aws_codecommit as codecommit,
-    aws_codebuild as codebuild
+    aws_codebuild as codebuild,
+    aws_iam as iam
     )
 from constructs import Construct
 from cdk_nag import NagSuppressions
@@ -43,7 +44,19 @@ class AwsBedrockLangchainCodePipelineStack(cdk.Stack):
                         ]
                     }
                 }
-            })
+            }),
+            role=iam.Role(self, "ValidateProjectRole", assumed_by=iam.ServicePrincipal("codebuild.amazonaws.com"),
+                          # Create inline policy to allow codebuild to run validate-template command 
+                          inline_policies={
+                            "ValidateTemplatePolicy": iam.PolicyDocument(statements=[
+                                iam.PolicyStatement(
+                                    effect=iam.Effect.ALLOW,
+                                    actions=["cloudformation:ValidateTemplate"],
+                                    resources=["*"]
+                                )
+                            ])
+                          }
+                        )
         )
 
         # Validation stage
@@ -82,7 +95,19 @@ class AwsBedrockLangchainCodePipelineStack(cdk.Stack):
                         ]
                     }
                 }
-            })
+            }),
+            role=iam.Role(self, "DeployProjectRole", assumed_by=iam.ServicePrincipal("codebuild.amazonaws.com"),
+                          # Create inline policy to allow codebuild to run deploy command as well as create change set
+                          inline_policies={
+                            "DeployPolicy": iam.PolicyDocument(statements=[
+                                iam.PolicyStatement(
+                                    effect=iam.Effect.ALLOW,
+                                    actions=["cloudformation:CreateChangeSet", "cloudformation:ExecuteChangeSet"],
+                                    resources=["*"]
+                                )
+                            ])
+                        }
+                    )
         )
 
         # Define the deploy stage

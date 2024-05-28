@@ -79,12 +79,12 @@ class RemediationHandler:
         llm = self.get_llm()
         parser = self.get_pydantic_parser()
         setup_and_retrieval = RunnableParallel(
-            {"context": retriever, "question": RunnablePassthrough()}
+            {"context": retriever, "$security_hub_finding_title": RunnablePassthrough()}
         )
         retrieval_chain = (
             setup_and_retrieval
             | PromptTemplate(
-                input_variables=["context", "question"],
+                input_variables=["context", "$security_hub_finding_title"],
                 partial_variables={"format_instructions": parser.get_format_instructions()},
                 template=template,
                 )
@@ -119,7 +119,7 @@ class RemediationHandler:
         """
         class sechub_output(BaseModel):
             remediation_details: str = Field(description="remediation_details")
-            remediation_available: bool = Field(description="remediaiton_available")
+            remediation_available: bool = Field(description="remediation_available")
             remediation_runbook: str = Field(description="remediation_runbook")
             security_hub_finding_title: str = Field(description="security_hub_finding_title")
             resource_type: str = Field(description="resource_type")
