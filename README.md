@@ -52,17 +52,12 @@ Follow these steps to deploy the CDK application:
    - First, download the CDK project repository containing the solution's infrastructure code. You can find the repository at the following location: [GitHub Repo Link] (placeholder).
    - Bootstrap CDK. Before deploying the solution, you need to bootstrap your AWS environment for CDK. Run the following command to bootstrap your environment: `cdk bootstrap aws://<your-aws-account-id>/<your-aws-region>`
    - Configure CDK App. Navigate to the downloaded CDK project directory and open the `app.py` file.
-     - Update the following parameters in the file:
-       - `aws_region`: Set the AWS Region where you want to deploy the solution.
-       - `bedrock_knowledge_base_id`: Provide the ID of the Amazon Bedrock knowledge base you set up manually in the prerequisites.
-       - `codecommit_branch`: Specify the branch of the CodeCommit repository you want to use.
+     - Update the following parameters in the `cdk.json` file:
+       - `NOTIFICATION_EMAILS`: Provide an email address for pipeline approval notifications.
+       - `KB_ID`: Provide the ID of the Amazon Bedrock knowledge base you set up manually in the prerequisites.
+       - `BEDROCK_AGENT_ARN`: Bedrock Agent ARN.
    - Synthesize CDK app. Run the following command to synthesize the CDK app and generate the CloudFormation template: `cdk synth`
    - Deploy CDK app. Finally, deploy the solution to your AWS environment using the following command: `cdk deploy --all`. This command will deploy all the necessary resources, including the Remediation Generator Lambda function, the CodeCommit repository, the CodePipeline, and other required components.
-
-1. Ensure AWS CDK is installed and configured.
-2. Clone this repository.
-3. Navigate to the root directory.
-4. Run `cdk deploy` to deploy the stack.
 
 ### File Details
 

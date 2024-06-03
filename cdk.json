@@ -15,7 +15,7 @@
     ]
   },
   "context": {
-    "MODEL_ID": "<MODEL_ID>",
+    "MODEL_ID": "anthropic.claude-3-sonnet-20240229-v1:0",
     "KB_ID": "<KB_ID>",
     "NOTIFICATION_EMAILS": ["<EMAIL>"],
     "BEDROCK_AGENT_ARN": "<BEDROCK_AGENT_ARN>",
