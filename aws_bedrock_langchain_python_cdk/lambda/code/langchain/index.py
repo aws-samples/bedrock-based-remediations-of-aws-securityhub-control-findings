@@ -6,9 +6,6 @@ from remediation import RemediationHandler
 LOGGER=logging.getLogger()
 LOGGER.setLevel(logging.INFO)
 
-# Setting baseline params these should be environment variables
-# kb_id = 'RRBZ3ORVMO'
-# modelId = "anthropic.claude-3-sonnet-20240229-v1:0"
 kb_id = os.environ['KB_ID']
 modelId = os.environ['MODEL_ID']
 
