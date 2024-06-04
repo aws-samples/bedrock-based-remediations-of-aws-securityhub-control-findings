@@ -13,13 +13,6 @@ kb_id = os.environ['KB_ID']
 modelId = os.environ['MODEL_ID']
 
 prompt1 = """
-        Variables:
-
-        {$security_hub_finding_title}
-
-        ************************
-
-        Prompt:
         The following information is your only source of truth, only answer the question with the provided context, if you are unable to answer from that, tell the user Im having trouble finding an answer for you.
 
         You will be provided with the title of a security finding from AWS Security Hub. Your task is to
@@ -96,13 +89,6 @@ prompt1 = """
         """
 
 prompt2 = """
-        Variables:
-
-        {remediation_details}, {sechub_finding}
-
-        ************************
-
-        Prompt:
         Your task is to create an AWS CloudFormation template in YAML format to remediate a Security Hub
         finding. The CloudFormation template will automate the remediation process using an AWS Systems
         Manager (SSM) custom document.
@@ -162,13 +148,6 @@ prompt2 = """
         """
 
 prompt3 = """
-        Variables:
-
-        {sechub_finding}, {remediation_runbook}
-
-        ************************
-
-        Prompt:
         You are a security expert guiding a customer on how to remediate the following finding:
 
         <finding>{sechub_finding}</finding>
