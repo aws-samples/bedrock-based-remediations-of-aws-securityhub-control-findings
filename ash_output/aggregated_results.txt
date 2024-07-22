@@ -14,13 +14,17 @@ Start of  /src/ash_output/work/git_report_result.txt
 #############################################
 >>>>>> begin tree result >>>>>>
 Git repository detected. Ensure your .gitignore configuration excludes all the files that you intend to ignore.
-/tmp/ash-run-scan.kaBt
+/tmp/ash-run-scan.gEkD
 ├── [  31]  .gitignore
 ├── [ 309]  CODE_OF_CONDUCT.md
 ├── [3.1K]  CONTRIBUTING.md
 ├── [ 947]  LICENSE
 ├── [8.2K]  README.md
 ├── [ 725]  app.py
+├── [ 21K]  ash_output
+│   ├── [ 15K]  aggregated_results.txt
+│   ├── [ 296]  ash-ignore-report.txt
+│   └── [1.4K]  ash-scan-set-files-list.txt
 ├── [ 65K]  aws_bedrock_langchain_python_cdk
 │   ├── [7.1K]  aws_bedrock_langchain_codepipeline_stack.py
 │   ├── [5.6K]  aws_bedrock_langchain_python_cdk_stack.py
@@ -50,7 +54,7 @@ Git repository detected. Ensure your .gitignore configuration excludes all the f
     └── [5.3K]  unit
         └── [1.3K]  test_aws_bedrock_langchain_python_cdk_stack.py
 
-  19M used in 11 directories, 23 files
+  19M used in 12 directories, 26 files
 <<<<<< end tree -x -h -a --du -I .git result <<<<<<
 OK
 git config --local --get-regexp "^secrets\..*$" output:
@@ -71,11 +75,11 @@ End of  /src/ash_output/work/git_report_result.txt
 Start of  /src/ash_output/work/grype_report_result.txt
 #############################################
 
->>>>>> Begin Grype output for /tmp/ash-run-scan.kaBt >>>>>>
+>>>>>> Begin Grype output for /tmp/ash-run-scan.gEkD >>>>>>
 
 No vulnerabilities found
 
-<<<<<< End Grype output for /tmp/ash-run-scan.kaBt <<<<<<
+<<<<<< End Grype output for /tmp/ash-run-scan.gEkD <<<<<<
 
 
 >>>>>> Begin Grype output for /src/ash_output/work >>>>>>
@@ -85,13 +89,13 @@ No vulnerabilities found
 <<<<<< End Grype output for /src/ash_output/work <<<<<<
 
 
->>>>>> Begin Syft output for /tmp/ash-run-scan.kaBt >>>>>>
+>>>>>> Begin Syft output for /tmp/ash-run-scan.gEkD >>>>>>
 
 NAME         VERSION  TYPE     
 aws-cdk-lib  2.100.0  python    
 pytest       6.2.5    python
 
-<<<<<< End Syft output for /tmp/ash-run-scan.kaBt <<<<<<
+<<<<<< End Syft output for /tmp/ash-run-scan.gEkD <<<<<<
 
 
 >>>>>> Begin Syft output for /src/ash_output/work >>>>>>
@@ -101,7 +105,7 @@ No packages discovered
 <<<<<< End Syft output for /src/ash_output/work <<<<<<
 
 
->>>>>> Begin Semgrep output for /tmp/ash-run-scan.kaBt >>>>>>
+>>>>>> Begin Semgrep output for /tmp/ash-run-scan.gEkD >>>>>>
 
 METRICS: Using configs from the Registry (like --config=p/ci) reports pseudonymous rule metrics to semgrep.dev.
 To disable Registry rule metrics, use "--metrics=off".
@@ -114,11 +118,11 @@ More information: https://semgrep.dev/docs/metrics
 ┌─────────────┐
 │ Scan Status │
 └─────────────┘
-  Scanning 23 files tracked by git with 1040 Code rules:
+  Scanning 26 files tracked by git with 1040 Code rules:
                                                                                                                         
   Language      Rules   Files          Origin      Rules                                                                
  ─────────────────────────────        ───────────────────                                                               
-  <multilang>      36      34          Community    1040                                                                
+  <multilang>      36      40          Community    1040                                                                
   python          241       5                                                                                           
   json              4       2                                                                                           
                                                                                                                         
@@ -134,11 +138,11 @@ Some files were skipped or only partially analyzed.
 
 (need more rules? `semgrep login` for additional free Semgrep Registry rules)
 
-Ran 280 rules on 17 files: 0 findings.
+Ran 280 rules on 20 files: 0 findings.
 If Semgrep missed a finding, please send us feedback to let us know!
 See https://semgrep.dev/docs/reporting-false-negatives/
 
-<<<<<< End Semgrep output for /tmp/ash-run-scan.kaBt <<<<<<
+<<<<<< End Semgrep output for /tmp/ash-run-scan.gEkD <<<<<<
 
 
 >>>>>> Begin Semgrep output for /src/ash_output/work >>>>>>
@@ -187,20 +191,20 @@ Looking for Jupyter notebook files
 
 
 <<<<<< end identifyipynb output for Jupyter notebook conversion <<<<<<
->>>>>> begin bandit result for /tmp/ash-run-scan.kaBt >>>>>>
+>>>>>> begin bandit result for /tmp/ash-run-scan.gEkD >>>>>>
 [main]	INFO	profile include tests: None
 [main]	INFO	profile exclude tests: None
 [main]	INFO	cli include tests: None
 [main]	INFO	cli exclude tests: None
 [main]	INFO	running on Python 3.10.14
-Run started:2024-07-22 18:26:19.885539
+Run started:2024-07-22 19:27:34.103068
 
 Test results:
 >> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
    Severity: Low   Confidence: High
    CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
    More Info: https://bandit.readthedocs.io/en/1.7.9/plugins/b101_assert_used.html
-   Location: /tmp/ash-run-scan.kaBt/tests/test_aws_bedrock_langchain_codepipeline_stack.py:13:4
+   Location: /tmp/ash-run-scan.gEkD/tests/test_aws_bedrock_langchain_codepipeline_stack.py:13:4
 12	    pipeline = pipeline_stack.node.find_child("BedrockLangchainPipeline")
 13	    assert pipeline is not None, "CodePipeline should be created"
 14	
@@ -210,7 +214,7 @@ Test results:
    Severity: Low   Confidence: High
    CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
    More Info: https://bandit.readthedocs.io/en/1.7.9/plugins/b101_assert_used.html
-   Location: /tmp/ash-run-scan.kaBt/tests/test_aws_bedrock_langchain_codepipeline_stack.py:16:4
+   Location: /tmp/ash-run-scan.gEkD/tests/test_aws_bedrock_langchain_codepipeline_stack.py:16:4
 15	    source_stage = pipeline.node.find_child("Source")
 16	    assert source_stage is not None, "Source stage should be created"
 17	
@@ -220,7 +224,7 @@ Test results:
    Severity: Low   Confidence: High
    CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
    More Info: https://bandit.readthedocs.io/en/1.7.9/plugins/b101_assert_used.html
-   Location: /tmp/ash-run-scan.kaBt/tests/test_aws_bedrock_langchain_codepipeline_stack.py:19:4
+   Location: /tmp/ash-run-scan.gEkD/tests/test_aws_bedrock_langchain_codepipeline_stack.py:19:4
 18	    source_action = source_stage.node.find_child("CodeCommit Source")
 19	    assert source_action is not None, "CodeCommit source action should be created"
 20	
@@ -230,7 +234,7 @@ Test results:
    Severity: Low   Confidence: High
    CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
    More Info: https://bandit.readthedocs.io/en/1.7.9/plugins/b101_assert_used.html
-   Location: /tmp/ash-run-scan.kaBt/tests/test_aws_bedrock_langchain_codepipeline_stack.py:22:4
+   Location: /tmp/ash-run-scan.gEkD/tests/test_aws_bedrock_langchain_codepipeline_stack.py:22:4
 21	    deploy_stage = pipeline.node.find_child("Deploy")
 22	    assert deploy_stage is not None, "Deploy stage should be created"
 23	
@@ -240,7 +244,7 @@ Test results:
    Severity: Low   Confidence: High
    CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
    More Info: https://bandit.readthedocs.io/en/1.7.9/plugins/b101_assert_used.html
-   Location: /tmp/ash-run-scan.kaBt/tests/test_aws_bedrock_langchain_codepipeline_stack.py:25:4
+   Location: /tmp/ash-run-scan.gEkD/tests/test_aws_bedrock_langchain_codepipeline_stack.py:25:4
 24	    cloudformation_action = deploy_stage.node.find_child("CloudFormation StackSet")
 25	    assert cloudformation_action is not None, "CloudFormation StackSet action should be created"
 
@@ -249,7 +253,7 @@ Test results:
    Severity: Low   Confidence: High
    CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
    More Info: https://bandit.readthedocs.io/en/1.7.9/plugins/b101_assert_used.html
-   Location: /tmp/ash-run-scan.kaBt/tests/unit/test_aws_bedrock_langchain_python_cdk_stack.py:12:4
+   Location: /tmp/ash-run-scan.gEkD/tests/unit/test_aws_bedrock_langchain_python_cdk_stack.py:12:4
 11	    stack = AwsBedrockLangchainPythonCdkStack(app, "AwsBedrockLangchainPythonCdkStack", model_id=model_id, kb_id=kb_id)
 12	    assert stack.model_id == model_id
 13	    assert stack.kb_id == kb_id
@@ -259,7 +263,7 @@ Test results:
    Severity: Low   Confidence: High
    CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
    More Info: https://bandit.readthedocs.io/en/1.7.9/plugins/b101_assert_used.html
-   Location: /tmp/ash-run-scan.kaBt/tests/unit/test_aws_bedrock_langchain_python_cdk_stack.py:13:4
+   Location: /tmp/ash-run-scan.gEkD/tests/unit/test_aws_bedrock_langchain_python_cdk_stack.py:13:4
 12	    assert stack.model_id == model_id
 13	    assert stack.kb_id == kb_id
 14	
@@ -269,7 +273,7 @@ Test results:
    Severity: Low   Confidence: High
    CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
    More Info: https://bandit.readthedocs.io/en/1.7.9/plugins/b101_assert_used.html
-   Location: /tmp/ash-run-scan.kaBt/tests/unit/test_aws_bedrock_langchain_python_cdk_stack.py:23:4
+   Location: /tmp/ash-run-scan.gEkD/tests/unit/test_aws_bedrock_langchain_python_cdk_stack.py:23:4
 22	    cdk_nag_report = NagSuppressions.get_report(stack)
 23	    assert len(cdk_nag_report.get_warnings()) > 0, "Expected warnings before applying NagSuppressions"
 24	
@@ -279,14 +283,14 @@ Test results:
    Severity: Low   Confidence: High
    CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
    More Info: https://bandit.readthedocs.io/en/1.7.9/plugins/b101_assert_used.html
-   Location: /tmp/ash-run-scan.kaBt/tests/unit/test_aws_bedrock_langchain_python_cdk_stack.py:28:4
+   Location: /tmp/ash-run-scan.gEkD/tests/unit/test_aws_bedrock_langchain_python_cdk_stack.py:28:4
 27	    cdk_nag_report = NagSuppressions.get_report(stack)
 28	    assert len(cdk_nag_report.get_warnings()) == 0, "No warnings expected after applying NagSuppressions"
 
 --------------------------------------------------
 
 Code scanned:
-	Total lines of code: 692
+	Total lines of code: 693
 	Total lines skipped (#nosec): 0
 	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 0
 
@@ -302,16 +306,16 @@ Run metrics:
 		Medium: 0
 		High: 9
 Files skipped (1):
-	/tmp/ash-run-scan.kaBt/aws_bedrock_langchain_python_cdk/tests/test_remediation.py (syntax error while parsing AST from file)
+	/tmp/ash-run-scan.gEkD/aws_bedrock_langchain_python_cdk/tests/test_remediation.py (syntax error while parsing AST from file)
 
-<<<<<< end bandit result for /tmp/ash-run-scan.kaBt <<<<<<
+<<<<<< end bandit result for /tmp/ash-run-scan.gEkD <<<<<<
 >>>>>> begin bandit result for /src/ash_output/work >>>>>>
 [main]	INFO	profile include tests: None
 [main]	INFO	profile exclude tests: None
 [main]	INFO	cli include tests: None
 [main]	INFO	cli exclude tests: None
 [main]	INFO	running on Python 3.10.14
-Run started:2024-07-22 18:26:19.993757
+Run started:2024-07-22 19:27:34.216975
 
 Test results:
 	No issues identified.
@@ -344,13 +348,13 @@ End of  /src/ash_output/work/py_report_result.txt
 Start of  /src/ash_output/work/yaml_report_result.txt
 #############################################
 
->>>>>> Begin yaml scan output for /tmp/ash-run-scan.kaBt >>>>>>
+>>>>>> Begin yaml scan output for /tmp/ash-run-scan.gEkD >>>>>>
 
 starting to investigate ...
 found 0 files to scan.  Skipping checkov scans.
 found 0 files to scan.  Skipping cfn_nag scans.
 
-<<<<<< End yaml scan output for /tmp/ash-run-scan.kaBt <<<<<<
+<<<<<< End yaml scan output for /tmp/ash-run-scan.gEkD <<<<<<
 
 
 >>>>>> Begin yaml scan output for /src/ash_output/work >>>>>>
