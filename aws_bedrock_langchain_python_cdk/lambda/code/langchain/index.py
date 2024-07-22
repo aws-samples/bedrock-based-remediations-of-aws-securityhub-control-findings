@@ -190,7 +190,6 @@ def rag_flow(sechub_finding, kb_id):
     outputParams = {
         "remediation_runbook": response.remediation_runbook,
         "remediation_details": response.remediation_details,
-        "resource_type": response.resource_type,
         "remediation_available": response.remediation_available,
         "resource_type": response.resource_type.replace(':','')
     }
@@ -222,8 +221,8 @@ def lambda_handler(event, context):
         LOGGER.info("RAG Response: {}".format(rag_response))
     # Check if rag_response contains a yaml code block. If it does, parse the yaml code and commit it to CodeCommit repo.
     if "```yaml" in rag_response:
-        yaml_template = remediation_handler.parse_yaml_code(rag_response, sechub_finding.replace(" ", ""))
-        commit_response, filepath = remediation_handler.commit_file(yaml_template, resource_type)
+        yaml_template = remediation_handler.parse_yaml_code(rag_response)
+        commit_response, filepath = remediation_handler.commit_file(sechub_finding.replace(" ", ""), yaml_template, resource_type)
         # Return response with link to the commited file.
         rag_response = "The remediation runbook has been committed to CodeCommit repo. File : {} with commit ID: {}".format(filepath, commit_response['commitId'])
 

@@ -1,4 +1,5 @@
 import os
+import tempfile
 import boto3
 import logging
 import warnings
@@ -126,7 +127,7 @@ class RemediationHandler:
 
         return PydanticOutputParser(pydantic_object=sechub_output)
     
-    def parse_yaml_code(self, string_output, filename):
+    def parse_yaml_code(self, string_output):
         """
         Parse the YAML code from the given string output and save it to a file.
 
@@ -137,13 +138,14 @@ class RemediationHandler:
         Returns:
             str: The filename of the generated YAML file.
         """
-        filename = f'GenRem-{filename}.yaml'
         yaml_code = string_output.split("```yaml")[1].split("```")[0]
-        with open(f"/tmp/{filename}", "w") as f:
+        # Write yaml_code to a temp file
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.yaml') as f:
             f.write(yaml_code)
-        return filename
+            file_path = f.name
+        return file_path
 
-    def commit_file(self, filename, resource_type):
+    def commit_file(self, filename, filepath, resource_type):
         """
         Commit the YAML file to the CodeCommit repository.
 
@@ -154,9 +156,11 @@ class RemediationHandler:
         Returns:
             tuple: A tuple containing the commit response (dict) and the file path (str) in the repository.
         """
+        filename = f'GenRem-{filename}.yaml'
         codecommit_client = boto3.client("codecommit", region_name=os.environ['AWS_DEFAULT_REGION'])
-        with open(f"/tmp/{filename}", "r") as f:
-            file_content = f.read()
+        # Read from temp file
+        with open(filepath, 'rb') as file:
+            file_content = file.read()
         # Get the latest commit ID
         commit_id = None
         try:
