@@ -142,6 +142,7 @@ class RemediationHandler:
         # Write yaml_code to a temp file
         with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.yaml') as f:
             f.write(yaml_code)
+            f.close()
             file_path = f.name
         return file_path
 
