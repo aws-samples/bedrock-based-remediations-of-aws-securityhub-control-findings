@@ -1,3 +1,5 @@
 cdk.out
 *__pycache__*
 .DS_Store
+.gitleaksignore
+.git*
