@@ -11,9 +11,16 @@ This solution follows prescriptive guidance for automating remediations for AWS 
 2. The request invokes a large language model (LLM) with context from a knowledge base containing AWS documentation stored as embeddings in an Amazon OpenSearch vector database.
 
 3. The LLM generates instructions for an action group that invokes the Remediation Generator AWS Lambda function to create a Systems Manager automation document.
+4. The automation document is published to an AWS CodeCommit repository. 
+   If the CFN_EXEC_ROLE_ARN context parameter is provided, a CloudFormation StackSet is created from the automation document template and StackSet instances are created in the provided WORKLOAD_ACCOUNTS and current AWS region. Otherwise, the CloudFormation stack is deployed directly using aws cloudformation deploy command.
+5. The SecOps user updates parameter files for the automation in a document management system folder, triggering AWS CodePipeline.
+1. The SecOps user utilizes the Agents for Amazon Bedrock chat console to enter their responses (e.g. "Generate automation for remediation of database migration service replication instances should not be public"). Optionally, findings can be exported from Security Hub to an Amazon S3 bucket.
+
+2. The request invokes a large language model (LLM) with context from a knowledge base containing AWS documentation stored as embeddings in an Amazon OpenSearch vector database.
+
+3. The LLM generates instructions for an action group that invokes the Remediation Generator AWS Lambda function to create a Systems Manager automation document.
 
 4. The automation document is published to an AWS CodeCommit repository.
-
 5. The SecOps user updates parameter files for the automation in a document management system folder, triggering AWS CodePipeline.
 
 6. AWS CodeBuild runs cfn-lint and cfn-nag validations on the CloudFormation template.
@@ -95,4 +102,4 @@ The `index.py` file contains the code for the Remediation Generator Lambda funct
 ### Other Files
 
 Depending on the specific implementation, there may be additional files or directories in the `aws_bedrock_langchain_python_cdk` folder. These files may contain utility functions, configurations, or other supporting code for the CDK application and the Remediation Generator Lambda function.
-
+The CloudFormation stack deployment approach is determined by whether the CFN_EXEC_ROLE_ARN context parameter is provided or not, as described in step 4 of the README.

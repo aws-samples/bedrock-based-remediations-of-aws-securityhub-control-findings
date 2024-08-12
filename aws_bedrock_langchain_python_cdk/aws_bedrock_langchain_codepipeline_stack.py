@@ -32,7 +32,20 @@ class AwsBedrockLangchainCodePipelineStack(cdk.Stack):
         
         stack_name = "SecurityHubRemediationWorkflow"
         change_set_name = "StagedChangeSet"
+        # Import required libraries
+        import json
+        import os
     
+        # Get CloudFormation execution role ARN from context
+        cfn_exec_role_arn = self.node.try_get_context("CFN_EXEC_ROLE_ARN")
+        if cfn_exec_role_arn is None:
+            cfn_exec_role_arn = ""
+
+        # Get Workload account IDs from context
+        workload_accounts = self.node.try_get_context("WORKLOAD_ACCOUNTS")
+        if workload_accounts is None:
+            workload_accounts = []
+            
         # Validation CodeBuild project
         validate_project = codebuild.PipelineProject(self, 'ValidateProject',
             build_spec=codebuild.BuildSpec.from_object({
@@ -90,8 +103,18 @@ class AwsBedrockLangchainCodePipelineStack(cdk.Stack):
                 'version': '0.2',
                 'phases': {
                     'build': {
-                        'commands': [
-                            'for file in $(find deploy -name "*.yaml"); do STACK_NAME=$(basename $file .yaml); aws cloudformation deploy --template-file $file --stack-name $STACK_NAME --parameter-overrides file://deploy/parameters/$STACK_NAME-params.json || aws cloudformation deploy --template-file $file --stack-name $STACK_NAME; done'
+                       'commands': [
+                            f"WORKLOAD_ACCOUNTS=$(printf ',%s' '{','.join(workload_accounts)}')",
+                            'for file in $(find deploy -name "*.yaml"); do',
+                            '    STACK_NAME=$(basename $file .yaml)',
+                            '    if [ -z "$CFN_EXEC_ROLE_ARN" ]; then',
+                            '        aws cloudformation deploy --template-file $file --stack-name $STACK_NAME --parameter-overrides file://deploy/parameters/$STACK_NAME-params.json || aws cloudformation deploy --template-file $file --stack-name $STACK_NAME',
+                            '    else',
+                            '        STACK_SET_NAME=$STACK_NAME',
+                            '        aws cloudformation create-stack-set --stack-set-name $STACK_SET_NAME --template-body file://$file --capabilities CAPABILITY_NAMED_IAM --execution-role-name $CFN_EXEC_ROLE_ARN',
+                            '        aws cloudformation create-stack-instances --stack-set-name $STACK_SET_NAME --accounts ${WORKLOAD_ACCOUNTS:1} --regions $(aws configure get region) --parameter-overrides file://deploy/parameters/$STACK_NAME-params.json',
+                            '    fi',
+                            'done'
                         ]
                     }
                 }
