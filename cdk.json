@@ -19,8 +19,8 @@
     "KB_ID": "<KB_ID>",
     "NOTIFICATION_EMAILS": ["<EMAIL>"],
     "BEDROCK_AGENT_ARN": "<BEDROCK_AGENT_ARN>",
-    "CFN_EXEC_ROLE_ARN": "",
-    "WORKLOAD_ACCOUNTS": "",
+    "CFN_EXEC_ROLE_NAME": "",
+    "WORKLOAD_ACCOUNTS": "0000000000 1111111111",
     "@aws-cdk/aws-lambda:recognizeLayerVersion": true,
     "@aws-cdk/core:checkSecretUsage": true,
     "@aws-cdk/core:target-partitions": [

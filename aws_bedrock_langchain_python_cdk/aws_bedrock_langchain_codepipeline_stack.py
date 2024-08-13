@@ -98,39 +98,51 @@ class AwsBedrockLangchainCodePipelineStack(cdk.Stack):
         )
 
         # Deploy CodeBuild project
-        deploy_project = codebuild.PipelineProject(self, 'DeployProject',
+        deploy_project = codebuild.PipelineProject(
+            self, 'DeployProject',
             build_spec=codebuild.BuildSpec.from_object({
-                'version': '0.2',
-                'phases': {
-                    'build': {
-                       'commands': [
-                            f"WORKLOAD_ACCOUNTS=$(printf ',%s' '{','.join(workload_accounts)}')",
-                            'for file in $(find deploy -name "*.yaml"); do',
-                            '    STACK_NAME=$(basename $file .yaml)',
-                            '    if [ -z "$CFN_EXEC_ROLE_ARN" ]; then',
-                            '        aws cloudformation deploy --template-file $file --stack-name $STACK_NAME --parameter-overrides file://deploy/parameters/$STACK_NAME-params.json || aws cloudformation deploy --template-file $file --stack-name $STACK_NAME',
-                            '    else',
-                            '        STACK_SET_NAME=$STACK_NAME',
-                            '        aws cloudformation create-stack-set --stack-set-name $STACK_SET_NAME --template-body file://$file --capabilities CAPABILITY_NAMED_IAM --execution-role-name $CFN_EXEC_ROLE_ARN',
-                            '        aws cloudformation create-stack-instances --stack-set-name $STACK_SET_NAME --accounts ${WORKLOAD_ACCOUNTS:1} --regions $(aws configure get region) --parameter-overrides file://deploy/parameters/$STACK_NAME-params.json',
-                            '    fi',
-                            'done'
+                "version": "0.2",
+                "phases": {
+                    "pre_build": {
+                        "commands": [
+                            "echo \"Preparing to deploy CloudFormation stacks...\""
+                        ]
+                    },
+                    "build": {
+                        "commands": [
+                            "set -e && for file in $(find deploy -name \"*.yaml\"); do STACK_NAME=$(basename $file .yaml); if [ -z \"$CFN_EXEC_ROLE_ARN\" ]; then echo \"Deploying stack $STACK_NAME directly...\"; aws cloudformation deploy --template-file $file --stack-name $STACK_NAME --parameter-overrides file://deploy/parameters/$STACK_NAME-params.json || exit 1; else echo \"Deploying stack $STACK_NAME as a StackSet...\"; STACK_SET_NAME=RemediationAutomate-$STACK_NAME; aws cloudformation create-stack-set --stack-set-name $STACK_SET_NAME --template-body file://$file --capabilities CAPABILITY_NAMED_IAM --execution-role-name $CFN_EXEC_ROLE_NAME || exit 1; aws cloudformation create-stack-instances --stack-set-name $STACK_SET_NAME --accounts ${WORKLOAD_ACCOUNTS} --regions us-east-1 || exit 1; fi; done; echo \"CloudFormation stack deployment complete.\""
+                        ]
+                    },
+                    "post_build": {
+                        "commands": [
+                            "if [ $? -ne 0 ]; then echo \"Error occurred during CloudFormation stack deployment.\"; exit 1; fi"
                         ]
                     }
                 }
             }),
-            role=iam.Role(self, "DeployProjectRole", assumed_by=iam.ServicePrincipal("codebuild.amazonaws.com"),
-                          # Create inline policy to allow codebuild to run deploy command as well as create change set
-                          inline_policies={
-                            "DeployPolicy": iam.PolicyDocument(statements=[
-                                iam.PolicyStatement(
-                                    effect=iam.Effect.ALLOW,
-                                    actions=["cloudformation:CreateChangeSet", "cloudformation:ExecuteChangeSet"],
-                                    resources=["*"]
-                                )
-                            ])
-                        }
+            environment=codebuild.BuildEnvironment(
+                build_image=codebuild.LinuxBuildImage.STANDARD_5_0
+            ),
+            role=iam.Role(
+                self, "DeployProjectRole",
+                assumed_by=iam.ServicePrincipal("codebuild.amazonaws.com"),
+                # Create inline policy to allow codebuild to run deploy command as well as create change set
+                inline_policies={
+                    "DeployPolicy": iam.PolicyDocument(
+                        statements=[
+                            iam.PolicyStatement(
+                                effect=iam.Effect.ALLOW,
+                                actions=["cloudformation:*", "ssm:*", "s3:*" ],
+                                resources=["*"]
+                            )
+                        ]
                     )
+                }
+            ),
+            environment_variables={
+                "CFN_EXEC_ROLE_ARN": codebuild.BuildEnvironmentVariable(value=cfn_exec_role_arn),
+                "WORKLOAD_ACCOUNTS": codebuild.BuildEnvironmentVariable(value=workload_accounts)
+            }
         )
 
         # Define the deploy stage
