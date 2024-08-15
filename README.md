@@ -63,6 +63,14 @@ Follow these steps to deploy the CDK application:
        - `NOTIFICATION_EMAILS`: Provide an email address for pipeline approval notifications.
        - `KB_ID`: Provide the ID of the Amazon Bedrock knowledge base you set up manually in the prerequisites.
        - `BEDROCK_AGENT_ARN`: Bedrock Agent ARN.
+      - `CFN_EXEC_ROLE_ARN` (optional):IAM role name to be used for CloudFormation StackSet execution.
+      - `WORKLOAD_ACCOUNTS` (optional): List of AWS account IDs where the solution will be deployed.
+    
+    Note: The `CFN_EXEC_ROLE_ARN` and `WORKLOAD_ACCOUNTS` parameters are optional and related to the CFN_EXEC_ROLE_NAME stack set deployment.
+    
+    - If `CFN_EXEC_ROLE_ARN` is provided, the solution will be deployed as a CloudFormation StackSet to the specified WORKLOAD_ACCOUNTS.
+    - If `CFN_EXEC_ROLE_ARN` is not provided, the solution will be deployed only to the current account.
+
    - Synthesize CDK app. Run the following command to synthesize the CDK app and generate the CloudFormation template: `cdk synth`
    - Deploy CDK app. Finally, deploy the solution to your AWS environment using the following command: `cdk deploy --all`. This command will deploy all the necessary resources, including the Remediation Generator Lambda function, the CodeCommit repository, the CodePipeline, and other required components.
 
