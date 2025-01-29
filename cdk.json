@@ -1,5 +1,5 @@
 {
-  "app": "python3 app.py",
+  "app": "python app.py",
   "watch": {
     "include": [
       "**"
@@ -15,12 +15,14 @@
     ]
   },
   "context": {
+    "GITHUB_OWNER": "<GITHUB_USERNAME>",
+    "GITHUB_REPO": "<REPO_NAME>",
     "MODEL_ID": "anthropic.claude-3-sonnet-20240229-v1:0",
-    "KB_ID": "<KB_ID>",
+    "KB_ID": "<KNOWLEDGEBASE_ID>",
     "NOTIFICATION_EMAILS": ["<EMAIL>"],
     "BEDROCK_AGENT_ARN": "<BEDROCK_AGENT_ARN>",
     "CFN_EXEC_ROLE_NAME": "",
-    "WORKLOAD_ACCOUNTS": "0000000000 1111111111",
+    "WORKLOAD_ACCOUNTS": "",
     "@aws-cdk/aws-lambda:recognizeLayerVersion": true,
     "@aws-cdk/core:checkSecretUsage": true,
     "@aws-cdk/core:target-partitions": [

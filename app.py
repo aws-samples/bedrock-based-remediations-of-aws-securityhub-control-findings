@@ -9,7 +9,7 @@ app = cdk.App()
 
 
 aws_bedrock_langchain_stack = AwsBedrockLangchainPythonCdkStack(app, "AwsBedrockLangchainPythonCdkStack")
-aws_bedrock_langchain_codepipeline_stack = AwsBedrockLangchainCodePipelineStack(app, "AwsBedrockLangchainCodePipeline", codecommit_repo=aws_bedrock_langchain_stack.codecommit_repo)
+aws_bedrock_langchain_codepipeline_stack = AwsBedrockLangchainCodePipelineStack(app, "AwsBedrockLangchainCodePipeline")
 
 Aspects.of(app).add(cdk_nag.AwsSolutionsChecks(reports=True, verbose=True))
 

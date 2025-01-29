@@ -11,25 +11,25 @@ This solution follows prescriptive guidance for automating remediations for AWS 
 2. The request invokes a large language model (LLM) with context from a knowledge base containing AWS documentation stored as embeddings in an Amazon OpenSearch vector database.
 
 3. The LLM generates instructions for an action group that invokes the Remediation Generator AWS Lambda function to create a Systems Manager automation document.
-4. The automation document is published to an AWS CodeCommit repository. 
+4. The automation document is published to a git repository. 
    If the CFN_EXEC_ROLE_ARN context parameter is provided, a CloudFormation StackSet is created from the automation document template and StackSet instances are created in the provided WORKLOAD_ACCOUNTS and current AWS region. Otherwise, the CloudFormation stack is deployed directly using aws cloudformation deploy command.
 5. The SecOps user updates parameter files for the automation in a document management system folder, triggering AWS CodePipeline.
-1. The SecOps user utilizes the Agents for Amazon Bedrock chat console to enter their responses (e.g. "Generate automation for remediation of database migration service replication instances should not be public"). Optionally, findings can be exported from Security Hub to an Amazon S3 bucket.
+6. The SecOps user utilizes the Agents for Amazon Bedrock chat console to enter their responses (e.g. "Generate automation for remediation of database migration service replication instances should not be public"). Optionally, findings can be exported from Security Hub to an Amazon S3 bucket.
 
-2. The request invokes a large language model (LLM) with context from a knowledge base containing AWS documentation stored as embeddings in an Amazon OpenSearch vector database.
+7. The request invokes a large language model (LLM) with context from a knowledge base containing AWS documentation stored as embeddings in an Amazon OpenSearch vector database.
 
-3. The LLM generates instructions for an action group that invokes the Remediation Generator AWS Lambda function to create a Systems Manager automation document.
+8. The LLM generates instructions for an action group that invokes the Remediation Generator AWS Lambda function to create a Systems Manager automation document.
 
-4. The automation document is published to an AWS CodeCommit repository.
-5. The SecOps user updates parameter files for the automation in a document management system folder, triggering AWS CodePipeline.
+9. The automation document is published to a git repository.
+10. The SecOps user updates parameter files for the automation in a document management system folder, triggering AWS CodePipeline.
 
-6. AWS CodeBuild runs cfn-lint and cfn-nag validations on the CloudFormation template.
+11. AWS CodeBuild runs cfn-lint and cfn-nag validations on the CloudFormation template.
 
-7. An Amazon SNS notification is sent to the SecOps user group for approval before deployment.
+12. An Amazon SNS notification is sent to the SecOps user group for approval before deployment.
 
-8. The approved Systems Manager automation document is executed.
+13. The approved Systems Manager automation document is executed.
 
-9. The SecOps user validates the compliance status for the remediated finding in the Security Hub console.
+14. The SecOps user validates the compliance status for the remediated finding in the Security Hub console.
 
 ### Deployment
 
@@ -70,28 +70,37 @@ Follow these steps to deploy the CDK application:
     
     - If `CFN_EXEC_ROLE_NAME` is provided, the solution will be deployed as a CloudFormation StackSet to the specified WORKLOAD_ACCOUNTS.
     - If `CFN_EXEC_ROLE_NAME` is not provided, the solution will be deployed only to the current account.
+  
+      > **IMPORTANT**: The following steps are required for GitHub integration. If you choose to use a different source control provider, you may do so, but you will need to edit the committer class accordingly. This is crucial for the proper functioning of the solution with your chosen source control system.
+  
+      **GitHub Setup** 
+         1. Create a GitHub personal access token with repo and admin:repo_hook permissions.
+         2. Store the token in AWS Secrets Manager with the name 'github-token'.
+         3. Update the `cdk.json` file with your GitHub information:
+               - Set "GITHUB_OWNER" to your GitHub username
+               - Set "GITHUB_REPO" to your repository name
+               - Set "GITHUB_BRANCH" to the branch you want to use (default is 'main')
 
    - Synthesize CDK app. Run the following command to synthesize the CDK app and generate the CloudFormation template: `cdk synth`
-   - Deploy CDK app. Finally, deploy the solution to your AWS environment using the following command: `cdk deploy --all`. This command will deploy all the necessary resources, including the Remediation Generator Lambda function, the CodeCommit repository, the CodePipeline, and other required components.
+   - Deploy CDK app. Finally, deploy the solution to your AWS environment using the following command: `cdk deploy --all`. This command will deploy all the necessary resources, including the Remediation Generator Lambda function, the CodePipeline, and other required components.
 
 ### File Details
 
-The `app.py` file is the main entry point for the CDK application. It defines the CDK stack and its resources, such as Lambda functions, CodeCommit repositories, CodePipelines, and more.
+The `app.py` file is the main entry point for the CDK application. It defines the CDK stack and its resources, such as Lambda functions, CodePipelines, and more.
 
 1. **Imports**: The file starts by importing the necessary modules and classes from the AWS CDK and other libraries.
 
 2. **Stack Definition**: The `AwsBedRockLangchainPythonCdkStack` class extends the `Stack` class from the AWS CDK. It contains the definitions for all the resources that will be deployed.
 
-3. **Parameters**: The `AwsBedRockLangchainPythonCdkStack` class constructor accepts several parameters, such as the AWS region, the Amazon Bedrock knowledge base ID, and the CodeCommit repository branch.
+3. **Parameters**: The `AwsBedRockLangchainPythonCdkStack` class constructor accepts several parameters, such as the AWS region, the Amazon Bedrock knowledge base ID, and the git repository repository branch.
 
 4. **Resource Definitions**:
-   - **CodeCommit Repository**: A CodeCommit repository is created to store the Systems Manager automation documents.
    - **Remediation Generator Lambda Function**: A Lambda function is created to generate the Systems Manager automation documents based on the input from the Amazon Bedrock agent.
    - **Other Resources**: Depending on the specific requirements, additional resources like S3 buckets, SNS topics, and IAM roles may be defined.
 
 5. **Resource Dependencies**: The stack defines dependencies between resources to ensure the correct order of deployment.
 
-6. **Outputs**: The stack may define outputs to display relevant information after deployment, such as the CodeCommit repository URL or the Remediation Generator Lambda function ARN.
+6. **Outputs**: The stack may define outputs to display relevant information after deployment, such as the Remediation Generator Lambda function ARN.
 
 The `index.py` file contains the code for the Remediation Generator Lambda function. This function is responsible for generating the Systems Manager automation documents based on the input from the Amazon Bedrock agent.
 
@@ -103,7 +112,7 @@ The `index.py` file contains the code for the Remediation Generator Lambda funct
 
 4. **Document Generation**: Based on the input, the function generates the Systems Manager automation document. This may involve parsing the input, retrieving relevant information from the knowledge base, and constructing the document using predefined templates or logic.
 
-5. **Document Storage**: Once the automation document is generated, the function stores it in the CodeCommit repository specified in the stack.
+5. **Document Storage**: Once the automation document is generated, the function stores it in the git repository specified in the stack.
 
 6. **Output**: The function may return a response indicating the successful generation and storage of the automation document.
 

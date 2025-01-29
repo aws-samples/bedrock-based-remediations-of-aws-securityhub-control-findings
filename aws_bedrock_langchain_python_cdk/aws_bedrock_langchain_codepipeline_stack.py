@@ -2,44 +2,44 @@ import aws_cdk as cdk
 from aws_cdk import (
     aws_codepipeline as codepipeline,
     aws_codepipeline_actions as codepipeline_actions,
-    aws_codecommit as codecommit,
     aws_codebuild as codebuild,
-    aws_iam as iam
+    aws_iam as iam,
+    SecretValue
     )
 from constructs import Construct
 from cdk_nag import NagSuppressions
 
 class AwsBedrockLangchainCodePipelineStack(cdk.Stack):
-    def __init__(self, scope: Construct, construct_id: str, codecommit_repo: codecommit.Repository, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         # Get params from context
         notification_emails = self.node.try_get_context("NOTIFICATION_EMAILS")
+        github_owner = self.node.try_get_context("GITHUB_OWNER")
+        github_repo = self.node.try_get_context("GITHUB_REPO")
+        github_branch = self.node.try_get_context("GITHUB_BRANCH") or 'main'
+        github_token = SecretValue.secrets_manager('github-token')
         
         # Define the source stage
         source_output = codepipeline.Artifact("SourceArtifact")
         source_stage = codepipeline.StageProps(
             stage_name="Source",
             actions=[
-                codepipeline_actions.CodeCommitSourceAction(
-                    action_name="CodeCommitSource",
-                    repository=codecommit_repo,
+                codepipeline_actions.GitHubSourceAction(
+                    action_name="GitHubSource",
+                    owner=github_owner,
+                    repo=github_repo,
+                    branch=github_branch,
+                    oauth_token=github_token,
                     output=source_output,
-                    branch='main',
                 )
             ],
         )
         
-        stack_name = "SecurityHubRemediationWorkflow"
-        change_set_name = "StagedChangeSet"
-        # Import required libraries
-        import json
-        import os
-    
         # Get CloudFormation execution role ARN from context
-        cfn_exec_role_arn = self.node.try_get_context("CFN_EXEC_ROLE_ARN")
-        if cfn_exec_role_arn is None:
-            cfn_exec_role_arn = ""
+        cfn_exec_role_name = self.node.try_get_context("CFN_EXEC_ROLE_NAME")
+        if cfn_exec_role_name is None:
+            cfn_exec_role_name = ""
 
         # Get Workload account IDs from context
         workload_accounts = self.node.try_get_context("WORKLOAD_ACCOUNTS")
@@ -110,7 +110,7 @@ class AwsBedrockLangchainCodePipelineStack(cdk.Stack):
                     },
                     "build": {
                         "commands": [
-                            "set -e && for file in $(find deploy -name \"*.yaml\"); do STACK_NAME=$(basename $file .yaml); if [ -z \"$CFN_EXEC_ROLE_ARN\" ]; then echo \"Deploying stack $STACK_NAME directly...\"; aws cloudformation deploy --template-file $file --stack-name $STACK_NAME --parameter-overrides file://deploy/parameters/$STACK_NAME-params.json || exit 1; else echo \"Deploying stack $STACK_NAME as a StackSet...\"; STACK_SET_NAME=RemediationAutomate-$STACK_NAME; aws cloudformation create-stack-set --stack-set-name $STACK_SET_NAME --template-body file://$file --capabilities CAPABILITY_NAMED_IAM --execution-role-name $CFN_EXEC_ROLE_NAME || exit 1; aws cloudformation create-stack-instances --stack-set-name $STACK_SET_NAME --accounts ${WORKLOAD_ACCOUNTS} --regions us-east-1 || exit 1; fi; done; echo \"CloudFormation stack deployment complete.\""
+                            "set -e && for file in $(find deploy -name \"*.yaml\"); do STACK_NAME=$(basename $file .yaml); if [ -z \"$CFN_EXEC_ROLE_NAME\" ]; then echo \"Deploying stack $STACK_NAME directly...\"; aws cloudformation deploy --template-file $file --stack-name $STACK_NAME --parameter-overrides file://deploy/parameters/$STACK_NAME-params.json --capabilities CAPABILITY_NAMED_IAM || exit 1; else echo \"Deploying stack $STACK_NAME as a StackSet...\"; STACK_SET_NAME=RemediationAutomate-$STACK_NAME; aws cloudformation create-stack-set --stack-set-name $STACK_SET_NAME --template-body file://$file --capabilities CAPABILITY_NAMED_IAM --execution-role-name $CFN_EXEC_ROLE_NAME || exit 1; aws cloudformation create-stack-instances --stack-set-name $STACK_SET_NAME --accounts ${WORKLOAD_ACCOUNTS} --regions us-east-1 || exit 1; fi; done; echo \"CloudFormation stack deployment complete.\""
                         ]
                     },
                     "post_build": {
@@ -140,7 +140,7 @@ class AwsBedrockLangchainCodePipelineStack(cdk.Stack):
                 }
             ),
             environment_variables={
-                "CFN_EXEC_ROLE_ARN": codebuild.BuildEnvironmentVariable(value=cfn_exec_role_arn),
+                "CFN_EXEC_ROLE_NAME": codebuild.BuildEnvironmentVariable(value=cfn_exec_role_name),
                 "WORKLOAD_ACCOUNTS": codebuild.BuildEnvironmentVariable(value=workload_accounts)
             }
         )
