@@ -1,2 +1,2 @@
-langchain
+langchain_community
 pydantic>=2.0.3

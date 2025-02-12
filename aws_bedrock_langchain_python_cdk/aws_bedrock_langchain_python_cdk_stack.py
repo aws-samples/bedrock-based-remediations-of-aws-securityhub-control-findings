@@ -4,10 +4,7 @@ from aws_cdk import (
     aws_iam as iam,
     aws_lambda as _lambda,
     aws_lambda_python_alpha as _alambda,
-    aws_codecommit as codecommit,
-    aws_iam as iam,
-    Stack,
-    Duration
+    SecretValue
 )
 from constructs import Construct
 from cdk_nag import NagSuppressions
@@ -21,6 +18,8 @@ class AwsBedrockLangchainPythonCdkStack(Stack):
         bedrock_agent_arn = self.node.try_get_context("BEDROCK_AGENT_ARN")
         kb_id = self.node.try_get_context("KB_ID")
         model_id = self.node.try_get_context("MODEL_ID")
+        github_repo = self.node.try_get_context("GITHUB_REPO")
+        github_owner = self.node.try_get_context("GITHUB_OWNER")
 
         bedrock_policy = iam.PolicyStatement(
             effect= iam.Effect.ALLOW,
@@ -29,36 +28,26 @@ class AwsBedrockLangchainPythonCdkStack(Stack):
             ],
             resources= ["*"]
         )
-        # Attach  policy to lambda_role for code commit read and write access
-        codecommit_policy = iam.PolicyStatement(
-            effect= iam.Effect.ALLOW,
-            actions= [
-                "codecommit:*",
-            ],
-            resources= ["*"]
-        ) 
-
-        # Create code commit repo
-        self.codecommit_repo = codecommit.Repository(
-            self,
-            "codecommit-repo",
-            repository_name="genai_remediations",
-            description="Code commit repo for remediations"
-        )
         
         lambda_role = iam.Role(
             self,
             "LambdaRole",
             assumed_by=iam.ServicePrincipal('lambda.amazonaws.com'),
-            description="Role to access code commit and Bedrock service by lambda",
+            description="Role to access Bedrock service by lambda",
             managed_policies=[iam.ManagedPolicy.from_aws_managed_policy_name(
                                     'service-role/AWSLambdaBasicExecutionRole'),
                                 ]
         )
 
         # attach policy to role
-        lambda_role.add_to_principal_policy(codecommit_policy)
         lambda_role.add_to_principal_policy(bedrock_policy)
+        
+        # attach policy to allow secrets manager secret retrieval for github-token
+        lambda_role.add_to_principal_policy(iam.PolicyStatement(
+            effect=iam.Effect.ALLOW,
+            actions=["secretsmanager:GetSecretValue"],
+            resources=["arn:aws:secretsmanager:*"]
+        ))
 
         boto3_lambda_layer = _alambda.PythonLayerVersion(self, 
                                                     'boto3-lambda-layer',
@@ -91,8 +80,8 @@ class AwsBedrockLangchainPythonCdkStack(Stack):
             environment={
                 "MODEL_ID": model_id,
                 "KB_ID": kb_id,
-                'codecommit_repo_name': self.codecommit_repo.repository_name,
-                "codecommit_branch_name": 'main'
+                "GITHUB_REPO": github_repo,
+                "GITHUB_OWNER": github_owner
             }
         )
         

@@ -1,6 +1,7 @@
 import logging
 import os
 from remediation import RemediationHandler
+from gitHubCommit import GitHubCommitter
 
 # Logger 
 LOGGER=logging.getLogger()
@@ -8,6 +9,8 @@ LOGGER.setLevel(logging.INFO)
 
 kb_id = os.environ['KB_ID']
 modelId = os.environ['MODEL_ID']
+github_repo = os.environ['GITHUB_REPO']
+github_owner = os.environ['GITHUB_OWNER']
 
 prompt1 = """
         The following information is your only source of truth, only answer the question with the provided context, if you are unable to answer from that, tell the user Im having trouble finding an answer for you.
@@ -183,6 +186,7 @@ prompt3 = """
 
 def rag_flow(sechub_finding, kb_id):
     remediation_handler = RemediationHandler(modelId)
+    
     # Invoke the llm using retrieval QA
     response = remediation_handler.retrievalChain(prompt1, kb_id).invoke(sechub_finding)
     LOGGER.info("Response_Chain_1: {}".format(response))
@@ -222,9 +226,11 @@ def lambda_handler(event, context):
     # Check if rag_response contains a yaml code block. If it does, parse the yaml code and commit it to CodeCommit repo.
     if "```yaml" in rag_response:
         yaml_template = remediation_handler.parse_yaml_code(rag_response)
-        commit_response, filepath = remediation_handler.commit_file(sechub_finding.replace(" ", ""), yaml_template, resource_type)
+        repo_name = github_owner + "/" + github_repo
+        github_commiter = GitHubCommitter(repo_name)
+        commit_response, filepath = github_commiter.commit_file(sechub_finding.replace(" ", ""), yaml_template, resource_type)
         # Return response with link to the commited file.
-        rag_response = "The remediation runbook has been committed to CodeCommit repo. File : {} with commit ID: {}".format(filepath, commit_response['commitId'])
+        rag_response = "The remediation runbook has been committed {} repo. File : {} with commit: {}".format(github_repo, filepath, commit_response['commit'].sha)
 
     response_body = {
         "application/json": {

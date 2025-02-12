@@ -6,6 +6,10 @@ import warnings
 from langchain_community.chat_models import BedrockChat
 from langchain.prompts import PromptTemplate
 from langchain_core.runnables import RunnablePassthrough, RunnableParallel
+
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 from langchain_core.output_parsers import StrOutputParser, PydanticOutputParser
 from langchain_community.retrievers import AmazonKnowledgeBasesRetriever
 from pydantic import BaseModel, Field
@@ -32,8 +36,6 @@ class RemediationHandler:
         boto_config = boto3.session.Config(connect_timeout=900, read_timeout=900, retries={"max_attempts": 0})
         self.bedrock_runtime = boto3.client(service_name="bedrock-runtime", config=boto_config, region_name=region)
         self.bedrock_client = boto3.client(service_name="bedrock-agent-runtime", config=boto_config, region_name=region)
-        self.codecommit_repo_name = os.environ["codecommit_repo_name"]
-        self.codecommit_branch_name = os.environ["codecommit_branch_name"]
 
     def get_llm(self):
         """
@@ -146,42 +148,6 @@ class RemediationHandler:
             file_path = f.name
         return file_path
 
-    def commit_file(self, filename, filepath, resource_type):
-        """
-        Commit the YAML file to the CodeCommit repository.
-
-        Args:
-            filename (str): The filename of the YAML file to be committed.
-            resource_type (str): The resource type associated with the remediation.
-
-        Returns:
-            tuple: A tuple containing the commit response (dict) and the file path (str) in the repository.
-        """
-        filename = f'GenRem-{filename}.yaml'
-        codecommit_client = boto3.client("codecommit", region_name=os.environ['AWS_DEFAULT_REGION'])
-        # Read from temp file
-        with open(filepath, 'rb') as file:
-            file_content = file.read()
-        # Get the latest commit ID
-        commit_id = None
-        try:
-            commit_id = codecommit_client.get_branch(
-                repositoryName=self.codecommit_repo_name,
-                branchName=self.codecommit_branch_name
-            )["branch"]["commitId"]
-        except codecommit_client.exceptions.BranchDoesNotExistException:
-            pass
-        put_file_params = {
-            'repositoryName': self.codecommit_repo_name,
-            'branchName': self.codecommit_branch_name,
-            'fileContent': file_content,
-            'filePath': f'{resource_type}/{filename}',
-            'commitMessage': "Push the remediation template for the security hub finding",
-        }
-        if commit_id:
-            put_file_params['parentCommitId'] = commit_id
-        commit_response = codecommit_client.put_file(**put_file_params)
-        return commit_response, f'{resource_type}/{filename}'
 
     def get_named_parameter(self, event, name):
         """
